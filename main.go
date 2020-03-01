@@ -1,21 +1,55 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
-	"github.com/nlopes/slack"
+	"github.com/slack-go/slack"
 )
+
+type ChannelMsg struct {
+	Id    int
+	Name  string
+	Fields json.RawMessage
+}
 
 func main() {
 
-	fmt.Println("hey", os.Getenv("SLACK_TOKEN"))
-	token := os.Getenv("xoxb-964613251380-964617721092-HP7yyvkeh57chPMTMaiLhJxI")
+	token := os.Getenv("SLACK_API_KEY")
+	fmt.Println(token)
 	api := slack.New(token)
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
 
+	channels, err := api.GetChannels(true)
+	if err != nil {
+		log.Fatalf("%s: %s", "Unable to get channels", err)
+	}
+
+	var memberIds []string
+	channelId := "hello"
+	for _, channel := range channels {
+		fmt.Println(channel.Name)
+		if channel.Name == "standup"{
+			memberIds = channel.Members
+			channelId = channel.ID
+			break
+		}
+	}
+
+	fmt.Println(memberIds)
+
+	for _, memberId := range memberIds {
+		fmt.Println(memberId, "hey")
+		rtm.SendMessage(rtm.NewOutgoingMessage("Hey", channelId))
+	}
+
+	//api.GetUsers()
+	//
+	//api.PostMessage()
 Loop:
 	for {
 		select {
