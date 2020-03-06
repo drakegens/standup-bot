@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/slack-go/slack"
@@ -16,11 +15,16 @@ type ChannelMsg struct {
 	Fields json.RawMessage
 }
 
+type MemberMsg struct {
+	RadQuery        string `json:"RadQuery"`
+	CorrelatedQuery string `json:"CorrelatedQuery"`
+}
+
 func main() {
 
 	token := os.Getenv("SLACK_API_KEY")
-	fmt.Println(token)
 	api := slack.New(token)
+
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
 
@@ -30,21 +34,23 @@ func main() {
 	}
 
 	var memberIds []string
-	channelId := "hello"
+//	userId := "hello"
 	for _, channel := range channels {
 		fmt.Println(channel.Name)
 		if channel.Name == "standup"{
 			memberIds = channel.Members
-			channelId = channel.ID
+			//userId = channel.ID
 			break
 		}
 	}
 
 	fmt.Println(memberIds)
+	//memberId := memberIds[0]
 
 	for _, memberId := range memberIds {
 		fmt.Println(memberId, "hey")
-		rtm.SendMessage(rtm.NewOutgoingMessage("Hey", channelId))
+		_, _, channelId, _ := api.OpenIMChannel(memberId)
+		rtm.SendMessage(rtm.NewOutgoingMessage("What did you do yesterday?", channelId))
 	}
 
 	//api.GetUsers()
@@ -61,6 +67,7 @@ Loop:
 
 			case *slack.MessageEvent:
 				fmt.Printf("Message: %v\n", ev)
+				fmt.Printf("Received a message!!!!!")
 				info := rtm.GetInfo()
 				prefix := fmt.Sprintf("<@%s> ", info.User.ID)
 
