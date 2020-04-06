@@ -34,7 +34,8 @@ func getStandUpUpdateFromUser(memberId string) string {
 
 	rtm.SendMessage(rtm.NewOutgoingMessage("What did you do yesterday?", channelId))
 
-Loop1:
+	//make this better
+YesterdayLoop:
 	for {
 		select {
 		case msg := <-rtm.IncomingEvents:
@@ -47,15 +48,15 @@ Loop1:
 			case *slack.MessageEvent:
 				update += ev.Text
 				fmt.Printf("Message: %v\n", ev.Text)
-				break Loop1
+				break YesterdayLoop
 
 			case *slack.RTMError:
 				fmt.Printf("Error: %s\n", ev.Error())
-				break Loop1
+				break YesterdayLoop
 
 			case *slack.InvalidAuthEvent:
 				fmt.Printf("Invalid credentials")
-				break Loop1
+				break YesterdayLoop
 
 			default:
 				//Take no action
@@ -63,7 +64,7 @@ Loop1:
 		}
 	}
 	rtm.SendMessage(rtm.NewOutgoingMessage("What are you going to do today?", channelId))
-Loop2:
+TodayLoop:
 	for {
 		select {
 		case msg := <-rtm.IncomingEvents:
@@ -76,15 +77,15 @@ Loop2:
 			case *slack.MessageEvent:
 				update += "\nToday: " + ev.Text
 				fmt.Printf("Message: %v\n", ev.Text)
-				break Loop2
+				break TodayLoop
 
 			case *slack.RTMError:
 				fmt.Printf("Error: %s\n", ev.Error())
-				break Loop2
+				break TodayLoop
 
 			case *slack.InvalidAuthEvent:
 				fmt.Printf("Invalid credentials")
-				break Loop2
+				break TodayLoop
 
 			default:
 				//Take no action
@@ -121,6 +122,7 @@ func main() {
 	var standupUpdates [10]string
 
 	for i, memberId := range memberIds {
+		// make this happen asynchronously, make a timeout if the user doesn't respond in time
 		standupUpdates[i] = getStandUpUpdateFromUser(memberId)
 	}
 
